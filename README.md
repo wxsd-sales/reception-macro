@@ -7,7 +7,8 @@ This Macro replaces your Cisco Telepresence with a Reception Check-In system. On
 ![sign_in](https://user-images.githubusercontent.com/21026209/146826597-b367a576-0b32-480e-947f-47dc9dabbc12.png)
 
 ## Requirements
-1. A CE9.X or RoomOS Cisco Telepresence 
+1. A CE9.X or RoomOS Cisco Telepresence.
+2. An Email services which can send Emails triggers by a webhook.
 
 ## Setup
 1. Upload the Macro on your device either through the web interface or via control hub.
