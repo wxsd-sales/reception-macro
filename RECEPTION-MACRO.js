@@ -3,19 +3,21 @@ import xapi from 'xapi';
 
 // Email details
 const WEBHOOK_URL = '###############';
+const SERVICE_KEY = '###############';
 
 
 // Set the number for the auto dial button to call
 const NUMBER = '#########';
 
 // Add the Button to the touch panel
+// Change the color, icon and name as desired
 xapi.command('UserInterface Extensions Panel Save', {
     PanelId: 'send_email'
     }, `<Extensions>
       <Version>1.8</Version>
       <Panel>
         <Order>1</Order>
-        <Type>Statusbar</Type>
+        <Type>OutOfCall</Type>
         <Icon>Home</Icon>
         <Color>#A866FF</Color>
         <Name>Sign In</Name>
@@ -30,7 +32,7 @@ xapi.command('UserInterface Extensions Panel Save', {
       <Version>1.8</Version>
       <Panel>
         <Order>1</Order>
-        <Type>Statusbar</Type>
+        <Type>OutOfCall</Type>
         <Icon>Helpdesk</Icon>
         <Color>#FF0000</Color>
         <Name>Call for assistance</Name>
@@ -43,7 +45,7 @@ xapi.command('UserInterface Extensions Panel Save', {
 // Do not change anything below
 ///////////////////////////////////
 
-// Varible to store temp name
+// Varible to store Email payload
 let PAYLOAD = { 
   'to': 'wimills@cisco.com',
   'name': '',
@@ -62,9 +64,9 @@ xapi.Config.HttpClient.Mode.get().then(value => {
 
 // Hide the user interface
 xapi.Config.UserInterface.Features.HideAll.get().then(value => {
-  console.log('UI Features is : ' + value);
+  console.log('Hide UI is : ' + value);
   if(value == 'False'){
-    console.log('Hidding the UI');
+    console.log('Hiding the UI');
     xapi.Config.UserInterface.Features.HideAll.set("True");
   }
 });
@@ -94,7 +96,7 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
 });
 
 
-// Listen for text inputs and display correct content
+// Listen for text inputs and display new content
 xapi.event.on('UserInterface Message TextInput Response', (event) => {
   switch(event.FeedbackId){
     case 'enter_name':
@@ -113,7 +115,7 @@ xapi.event.on('UserInterface Message TextInput Response', (event) => {
 
 
 
-// Handle all the Text Inputs
+// Create Name input and handle submit
 xapi.event.on('UserInterface Message Prompt Response', (event) => {
   console.log('FeedbackId: ' + event.FeedbackId + ' Option: '+ event.OptionId);
   switch(event.FeedbackId){
@@ -137,21 +139,18 @@ xapi.event.on('UserInterface Message Prompt Response', (event) => {
 });
 
 
-
+// This function sends a notification email via a webhook url
 function sendEmail(){
 
   console.log('Sending Email');
 
-
-
-
+  // Capturing timestamp
   const date = Date.now();
-
-
   PAYLOAD.message = new Date();
 
   console.log(PAYLOAD);
 
+  // Sending payload
   xapi.command('HttpClient Post', { 
     Header: ["Content-Type: application/json"], 
     Url: WEBHOOK_URL,
@@ -177,5 +176,3 @@ function sendEmail(){
 
   
 }
-
-
