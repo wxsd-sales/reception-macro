@@ -16,6 +16,10 @@ This macro replaces interface on your Cisco Telepresence with a Reception Check-
 ## Uninstall
 This macro hides the UI elements on your device, so to show them again, do the following.
 1. Disable or remove the macro
-2. Run this command on the CLI for your devices: ``xConfiguration UserInterface Features HideAll: False``
-More infromation available here:
+2. Run the following commands on the CLI of your device:  
+``xConfiguration UserInterface Features HideAll: False``.  
+``xConfiguration UserInterface SettingsMenu Visibility: Auto``.  
+More infromation available here:  
 https://roomos.cisco.com/xapi/Configuration.UserInterface.Features.HideAll/
+https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility
+
