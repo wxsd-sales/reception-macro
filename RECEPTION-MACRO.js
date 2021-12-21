@@ -67,7 +67,7 @@ xapi.command('UserInterface Extensions Panel Save', {
         <Type>Home</Type>
         <Icon>Home</Icon>
         <Color>#A866FF</Color>
-        <Name>Sign In</Name>
+        <Name>Check In</Name>
         <ActivityType>Custom</ActivityType>
       </Panel>
     </Extensions>`);
@@ -95,7 +95,7 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
       PAYLOAD.message = '';
       console.log('Send Email Selected');
       xapi.command("UserInterface Message Prompt Display", {
-            Title: "Reception Sign In"
+            Title: "Reception Check In"
           , Text: 'Please enter your name below'
           , FeedbackId: 'sign_in_form'
           , 'Option.1': 'Tap to enter name:'
@@ -117,11 +117,11 @@ xapi.event.on('UserInterface Message TextInput Response', (event) => {
       PAYLOAD.name = event.Text;
       console.log('Name Entered: ' + PAYLOAD.name);
       xapi.command("UserInterface Message Prompt Display", {
-            Title: "Reception Sign In"
+            Title: "Reception Check In"
           , Text: 'Please enter your name below'
           , FeedbackId: 'sign_in_form'
           , 'Option.1': 'Tap to change name: ' + PAYLOAD.name
-          , 'Option.2': 'Tap to sign in'
+          , 'Option.2': 'Tap to check in'
         }).catch((error) => { console.error(error); });
       break; 
   }
@@ -174,7 +174,7 @@ function sendEmail(){
   .then((result) => {
      xapi.Command.UserInterface.Message.Alert.Display
         ({ Duration: 3
-        , Text: 'Sign in successful'
+        , Text: 'Check in successful'
         , Title: 'Success'});
   })
   .catch((err) => {
