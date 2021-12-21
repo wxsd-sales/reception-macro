@@ -21,6 +21,6 @@ This macro hides the UI elements on your device, so to show them again, do the f
 ``xConfiguration UserInterface SettingsMenu Visibility: Auto``.  
 More infromation available here:  
 https://roomos.cisco.com/xapi/Configuration.UserInterface.Features.HideAll/
-https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility. 
+https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility.  
 Alternatively you can run the ``Show-UI`` Macro to show the UI again.
 
