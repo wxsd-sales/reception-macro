@@ -11,7 +11,7 @@ This macro replaces interface on your Cisco Telepresence with a Reception Check-
 2. An Email services which can send Emails triggers by a webhook.
 
 ## Setup
-1. Upload the Macro on your device either through the web interface or via control hub.
+1. Upload the Macro ``RECEPTION_MACRO`` on your device either through the web interface or via Control Hub.
 
 ## Uninstall
 This macro hides the UI elements on your device, so to show them again, do the following.
@@ -21,5 +21,6 @@ This macro hides the UI elements on your device, so to show them again, do the f
 ``xConfiguration UserInterface SettingsMenu Visibility: Auto``.  
 More infromation available here:  
 https://roomos.cisco.com/xapi/Configuration.UserInterface.Features.HideAll/
-https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility
+https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility. 
+Alternatively you can run the ``Show-UI`` Macro to show the UI again.
 
