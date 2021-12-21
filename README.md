@@ -1,4 +1,4 @@
-# RECEPTION-MACO
+# RECEPTION-MACRO
 
 This macro replaces interface on your Cisco Telepresence with a Reception Check-In system. One button will ask the guest to enter their name and notify the appropate staff via email. The send button will automatically dial a remote assistant.
 
