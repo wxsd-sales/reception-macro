@@ -5,40 +5,15 @@ import xapi from 'xapi';
 const WEBHOOK_URL = '###############';
 const SERVICE_KEY = '###############';
 
+// Set the target email to be notified
+const EMAIL = '########';
+
 
 // Set the number for the auto dial button to call
 const NUMBER = '#########';
 
-// Add the Button to the touch panel
-// Change the color, icon and name as desired
-xapi.command('UserInterface Extensions Panel Save', {
-    PanelId: 'send_email'
-    }, `<Extensions>
-      <Version>1.8</Version>
-      <Panel>
-        <Order>1</Order>
-        <Type>OutOfCall</Type>
-        <Icon>Home</Icon>
-        <Color>#A866FF</Color>
-        <Name>Sign In</Name>
-        <ActivityType>Custom</ActivityType>
-      </Panel>
-    </Extensions>`);
 
-// Add the Button to the touch panel
-xapi.command('UserInterface Extensions Panel Save', {
-    PanelId: 'place_call'
-    }, `<Extensions>
-      <Version>1.8</Version>
-      <Panel>
-        <Order>1</Order>
-        <Type>OutOfCall</Type>
-        <Icon>Helpdesk</Icon>
-        <Color>#FF0000</Color>
-        <Name>Call for assistance</Name>
-        <ActivityType>Custom</ActivityType>
-      </Panel>
-    </Extensions>`);
+
 
 
 ///////////////////////////////////
@@ -47,7 +22,7 @@ xapi.command('UserInterface Extensions Panel Save', {
 
 // Varible to store Email payload
 let PAYLOAD = { 
-  'to': 'wimills@cisco.com',
+  'to': EMAIL,
   'name': '',
   'message':  ''
 }
@@ -71,7 +46,46 @@ xapi.Config.UserInterface.Features.HideAll.get().then(value => {
   }
 });
 
+// Hide the settings menu
+xapi.Config.UserInterface.SettingsMenu.Visibility.get().then(value => {
+  console.log('Settings Visibility is : ' + value);
+  if(value == 'Auto'){
+    console.log('Hiding the settings');
+    xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
+  }
+});
 
+
+// Add the Button to the touch panel
+// Change the color, icon and name as desired
+xapi.command('UserInterface Extensions Panel Save', {
+    PanelId: 'send_email'
+    }, `<Extensions>
+      <Version>1.8</Version>
+      <Panel>
+        <Order>1</Order>
+        <Type>Home</Type>
+        <Icon>Home</Icon>
+        <Color>#A866FF</Color>
+        <Name>Sign In</Name>
+        <ActivityType>Custom</ActivityType>
+      </Panel>
+    </Extensions>`);
+
+// Add the Button to the touch panel
+xapi.command('UserInterface Extensions Panel Save', {
+    PanelId: 'place_call'
+    }, `<Extensions>
+      <Version>1.8</Version>
+      <Panel>
+        <Order>1</Order>
+        <Type>Home</Type>
+        <Icon>Helpdesk</Icon>
+        <Color>#FF0000</Color>
+        <Name>Call for assistance</Name>
+        <ActivityType>Custom</ActivityType>
+      </Panel>
+    </Extensions>`);
 
 // Listen for initial button presses
 xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
