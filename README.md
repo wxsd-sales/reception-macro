@@ -1,18 +1,9 @@
 # RECEPTION-MACRO
 
-This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system. One button will ask the guest to enter their name and notify the appropate staff via email. The send button will automatically dial a remote assistant.
+This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notifity staff via email, the other button will automatically dial a member of staff.
 
-## UI on a Touch 10
-![touch10](https://user-images.githubusercontent.com/21026209/146968820-51a4dcaa-bb24-4761-a8e0-95386fa96e8a.png)
-## Check in menu
-![checkin1](https://user-images.githubusercontent.com/21026209/146968830-1eb089f0-a0ab-49d1-be80-a742f0c4c137.png)
-## Prompt to enter name
-![EnterName](https://user-images.githubusercontent.com/21026209/146968839-c74da4de-c2d1-4b92-a758-96ba0f3e4cb8.png)
-## Hit Check in
-![hitsend](https://user-images.githubusercontent.com/21026209/146968848-69c6f26f-f141-4706-9287-970e8b1f1e7d.png)
-## Check in successful
-![success1](https://user-images.githubusercontent.com/21026209/146968856-d31b4729-262d-4f33-8bed-27426521d6ba.png)
-
+## Flow of the check in process
+![ezgif-2-6041f9e0f5](https://user-images.githubusercontent.com/21026209/148802958-06ecd19b-f57e-4ee5-8845-a28078257d17.gif)
 
 ## Requirements
 1. A CE9.X or RoomOS Cisco Telepresence.
