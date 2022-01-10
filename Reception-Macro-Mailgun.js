@@ -23,6 +23,64 @@ const hash = btoa(`${USERNAME}:${API_Key}`);
 // Varible to store name entered
 let  tempName = '';
 
+// Enable the HTTP client if it isn't already
+xapi.Config.HttpClient.Mode.get().then(value => {
+  console.log('HTTP Client is : ' + value);
+  if(value == 'Off'){
+    console.log('Enabling HTTP Client');
+    xapi.Config.HttpClient.Mode.set('On');
+  }
+});
+
+// Hide the user interface
+xapi.Config.UserInterface.Features.HideAll.get().then(value => {
+  console.log('Hide UI is : ' + value);
+  if(value == 'False'){
+    console.log('Hiding the UI');
+    xapi.Config.UserInterface.Features.HideAll.set("True");
+  }
+});
+
+// Hide the settings menu
+xapi.Config.UserInterface.SettingsMenu.Visibility.get().then(value => {
+  console.log('Settings Visibility is : ' + value);
+  if(value == 'Auto'){
+    console.log('Hiding the settings');
+    xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
+  }
+});
+
+// Add the Button to the touch panel
+// Change the color, icon and name as desired
+xapi.command('UserInterface Extensions Panel Save', {
+    PanelId: 'send_email'
+    }, `<Extensions>
+      <Version>1.8</Version>
+      <Panel>
+        <Order>1</Order>
+        <Type>Home</Type>
+        <Icon>Home</Icon>
+        <Color>#A866FF</Color>
+        <Name>Check In</Name>
+        <ActivityType>Custom</ActivityType>
+      </Panel>
+    </Extensions>`);
+
+// Add the Button to the touch panel
+xapi.command('UserInterface Extensions Panel Save', {
+    PanelId: 'place_call'
+    }, `<Extensions>
+      <Version>1.8</Version>
+      <Panel>
+        <Order>1</Order>
+        <Type>Home</Type>
+        <Icon>Helpdesk</Icon>
+        <Color>#FF0000</Color>
+        <Name>Call for assistance</Name>
+        <ActivityType>Custom</ActivityType>
+      </Panel>
+    </Extensions>`);
+
 // This function displays the panel depending on state
 function showPanel(state){
 
@@ -191,7 +249,6 @@ function mailgunSend(data){
   }, '')
   .then((result) => {
     console.log('Email sent');
-    console.log(result);
     xapi.Command.UserInterface.Message.Alert.Display
       ({ Duration: 3
       , Text: 'Check in successful'
@@ -208,5 +265,5 @@ function mailgunSend(data){
         , Title: 'Error'});
   });
 
-  
 }
+
