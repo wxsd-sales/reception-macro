@@ -1,32 +1,31 @@
 import xapi from 'xapi';
 
 
-// Email details
-const WEBHOOK_URL = '###############';
-const SERVICE_KEY = '###############';
+// Webhook details
+const WEBHOOK_URL = '#########';
+const API_KEY= '#########';
 
-// Set the target email to be notified
-const EMAIL = '########';
-
+// Email Parameters
+const TO = 'staff@example.com';
+const FROM = 'notification@example.com';
 
 // Set the number for the auto dial button to call
-const NUMBER = '#########';
-
-
-
+const NUMBER = 'staff@example.com';
 
 
 ///////////////////////////////////
 // Do not change anything below
 ///////////////////////////////////
 
-// Varible to store Email payload
-let PAYLOAD = { 
-  'to': EMAIL,
-  'name': '',
-  'message':  ''
-}
+// Varible to store name entered
+let  tempName = '';
 
+// HTTP Header and URL, modify depending on email service
+const HTTPParamters = {
+    Header: ["Content-Type: application/json", 
+            "API: "+ API_KEY], 
+    Url: WEBHOOK_URL,
+    };
 
 // Enable the HTTP client if it isn't already
 xapi.Config.HttpClient.Mode.get().then(value => {
@@ -87,19 +86,138 @@ xapi.command('UserInterface Extensions Panel Save', {
       </Panel>
     </Extensions>`);
 
+// This function displays the panel depending on state
+function showPanel(state){
+
+  let message = '';
+  let name = '';
+  let name_button = '';
+  let submit = '';
+  switch(state){
+    case 'initial':
+      message = 'Please enter your name to check in';
+      name = '';
+      name_button = 'Enter Name';
+      submit = '';
+      break;
+    case 'submit':
+      message = 'Press check in when ready';
+      name_button = 'Change Name';
+      name = `<Widget>
+                  <WidgetId>name_text</WidgetId>
+                  <Name>Name Entered: ${tempName}</Name>
+                  <Type>Text</Type>
+                  <Options>size=2;fontSize=normal;align=center</Options>
+                </Widget>`;
+      submit = `<Row>
+                    <Widget>
+                      <WidgetId>submit_button</WidgetId>
+                      <Name>Check In</Name>
+                      <Type>Button</Type>
+                      <Options>size=2</Options>
+                    </Widget>
+                  </Row>`;
+      break;
+  }
+
+  let panel = `<Extensions>
+    <Version>1.8</Version>
+    <Panel>
+      <Order>9</Order>
+      <Origin>local</Origin>
+      <Type>Never</Type>
+      <Icon>Webex</Icon>
+      <Color>#A8660</Color>
+      <Name>Check_In_1</Name>
+      <ActivityType>Custom</ActivityType>
+      <Page>
+        <Name>Check In</Name>
+        <Row>
+          <Widget>
+            <WidgetId>message</WidgetId>
+            <Name>${message}</Name>
+            <Type>Text</Type>
+            <Options>size=4;fontSize=normal;align=center</Options>
+          </Widget>
+        </Row>
+        <Row>
+          ${name}
+          <Widget>
+            <WidgetId>enter_name</WidgetId>
+            <Name>${name_button}</Name>
+            <Type>Button</Type>
+            <Options>size=2</Options>
+          </Widget>
+        </Row>
+        ${submit}
+        <PageId>ticTac~Toe</PageId>
+        <Options>hideRowNames=1</Options>
+      </Page>
+    </Panel>
+  </Extensions>
+  `;
+
+  xapi.command('UserInterface Extensions Panel Save', {
+        PanelId: 'Check_In_1'
+    }, panel
+  ).then((event) => {
+          xapi.command('UserInterface Extensions Panel Open', {
+              PanelId: 'Check_In_1'
+          })
+      });
+}
+
+
+// Listen for clicks on the buttons
+xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
+
+    if (event.Type !== 'clicked')
+      return
+      
+    if (event.WidgetId == 'enter_name'){
+      console.log('enter name clicked');
+      xapi.command('UserInterface Message TextInput Display', {
+            FeedbackId: 'enter_name',
+            Text: 'Please enter your name',
+            InputType: 'SingleLine',
+            Placeholder: 'Name',
+            Duration: 0,
+          }).catch((error) => { console.error(error); });
+    }
+    else if (event.WidgetId == 'submit_button'){
+      console.log('submit button clicked');
+      xapi.command('UserInterface Extensions Panel Close');
+      const timestamp = new Date();
+
+      const PAYLOAD = { 
+        "to": TO,
+        "from": FROM, 
+        "subject": tempName+' just checked in',
+        "text": `${tempName} just checked in at ${timestamp}`
+      }
+      sendEmail(PAYLOAD);
+    }
+    
+  });
+
+// Listen for text inputs
+xapi.event.on('UserInterface Message TextInput Response', (event) => {
+  switch(event.FeedbackId){
+    case 'enter_name':
+      tempName = event.Text;
+      console.log('Name Entered: ' + tempName);
+      showPanel('submit');
+      break; 
+  }
+});
+
+
 // Listen for initial button presses
 xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
     if(event.PanelId == 'send_email'){
-      PAYLOAD.name = '';
-      PAYLOAD.name = '';
-      PAYLOAD.message = '';
+      tempName = '';
       console.log('Send Email Selected');
-      xapi.command("UserInterface Message Prompt Display", {
-            Title: "Reception Check In"
-          , Text: 'Please enter your name below'
-          , FeedbackId: 'sign_in_form'
-          , 'Option.1': 'Tap to enter name:'
-        }).catch((error) => { console.error(error); });
+      showPanel('initial')
     } else if (event.PanelId == 'place_call') {
       console.log('Place Call Selected');
 
@@ -110,67 +228,18 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
 });
 
 
-// Listen for text inputs and display new content
-xapi.event.on('UserInterface Message TextInput Response', (event) => {
-  switch(event.FeedbackId){
-    case 'enter_name':
-      PAYLOAD.name = event.Text;
-      console.log('Name Entered: ' + PAYLOAD.name);
-      xapi.command("UserInterface Message Prompt Display", {
-            Title: "Reception Check In"
-          , Text: 'Please enter your name below'
-          , FeedbackId: 'sign_in_form'
-          , 'Option.1': 'Tap to change name: ' + PAYLOAD.name
-          , 'Option.2': 'Tap to check in'
-        }).catch((error) => { console.error(error); });
-      break; 
-  }
-});
-
-
-
-// Create Name input and handle submit
-xapi.event.on('UserInterface Message Prompt Response', (event) => {
-  console.log('FeedbackId: ' + event.FeedbackId + ' Option: '+ event.OptionId);
-  switch(event.FeedbackId){
-    case 'sign_in_form':
-      switch(event.OptionId){
-        case '1':   // This choice handles the name input
-          xapi.command('UserInterface Message TextInput Display', {
-            FeedbackId: 'enter_name',
-            Text: 'Please enter your name',
-            InputType: 'SingleLine',
-            Placeholder: '',
-            Duration: 0,
-          }).catch((error) => { console.error(error); });
-          break;
-        case '2':   // This choice sends the email notification
-          sendEmail();
-          break;
-      }
-    break;
-  }
-});
-
-
-// This function sends a notification email via a webhook url
-function sendEmail(){
+// This function sends an email via a webhook
+// the payload requires a payload object which must contain
+// to, from, subject and text
+function sendEmail(data){
 
   console.log('Sending Email');
 
-  // Capturing timestamp
-  const date = Date.now();
-  PAYLOAD.message = new Date();
-
-  console.log(PAYLOAD);
-
+  console.log(data);
+  
   // Sending payload
-  xapi.command('HttpClient Post', { 
-    Header: ["Content-Type: application/json"], 
-    Url: WEBHOOK_URL,
-    ResultBody: 'plaintext'
-  }, 
-    JSON.stringify(PAYLOAD))
+  xapi.command('HttpClient Post', HTTPParamters, 
+    JSON.stringify(data))
   .then((result) => {
      xapi.Command.UserInterface.Message.Alert.Display
         ({ Duration: 3
@@ -188,5 +257,4 @@ function sendEmail(){
         , Title: 'Error'});
   });
 
-  
 }
