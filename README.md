@@ -1,4 +1,4 @@
-# RECEPTION-MACRO
+# Reception-Macro
 
 This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notify staff via email, the other button will automatically dial a member of staff.
 
