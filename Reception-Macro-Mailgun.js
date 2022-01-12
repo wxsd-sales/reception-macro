@@ -13,6 +13,9 @@ const FROM = 'mailgun@<SANDBOX-DOMAIN>';
 const NUMBER = 'staff@example.com';
 
 
+// Show call controls while in call
+const SHOW_INCALL_CONTROLS = true;
+
 ///////////////////////////////////
 // Do not change anything below
 ///////////////////////////////////
@@ -22,6 +25,7 @@ const hash = btoa(`${USERNAME}:${API_Key}`);
 
 // Varible to store name entered
 let  tempName = '';
+
 
 // Enable the HTTP client if it isn't already
 xapi.Config.HttpClient.Mode.get().then(value => {
@@ -49,6 +53,7 @@ xapi.Config.UserInterface.SettingsMenu.Visibility.get().then(value => {
     xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
   }
 });
+
 
 // Add the Button to the touch panel
 // Change the color, icon and name as desired
@@ -249,6 +254,7 @@ function mailgunSend(data){
   }, '')
   .then((result) => {
     console.log('Email sent');
+    console.log(result.Body);
     xapi.Command.UserInterface.Message.Alert.Display
       ({ Duration: 3
       , Text: 'Check in successful'
@@ -267,3 +273,31 @@ function mailgunSend(data){
 
 }
 
+function detectCallAnswered(event){
+
+  // Log all Call Answerstate events
+  console.log(event);
+  
+  // Check that it is Answered and that currentMarco is true
+  if(event != 'Answered' && SHOW_INCALL_CONTROLS == true )
+    return;
+ 
+  console.log('Call answered, showing call controls');
+  xapi.Config.UserInterface.Features.HideAll.set("False");
+    
+
+}
+
+function detectCallDisconnect(event){
+
+  console.log (event);
+  if(event != 'Disconnecting' )
+    return;
+
+  console.log('Call disconnecting, hiding the call controls');
+  xapi.Config.UserInterface.Features.HideAll.set("True");
+}
+
+// Subscribe to the Call Status and send it to our custom functions
+xapi.Status.Call.AnswerState.on(detectCallAnswered);
+xapi.Status.Call.Status.on(detectCallDisconnect);
