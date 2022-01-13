@@ -262,6 +262,8 @@ function sendEmail(data){
 
 }
 
+// This function will detect if a call is in an answered state
+// and enable call controls if enabled for this macro
 function detectCallAnswered(event){
 
   // Log all Call Answerstate events
@@ -277,16 +279,21 @@ function detectCallAnswered(event){
 
 }
 
-function detectCallDisconnect(event){
+// This function will detect if a call ending or receiving a call
+function detectCall(event){
 
   console.log (event);
-  if(event != 'Disconnecting' )
-    return;
 
-  console.log('Call disconnecting, hiding the call controls');
-  xapi.Config.UserInterface.Features.HideAll.set("True");
+  if(event == 'Disconnecting' ){
+    console.log('Call disconnecting, hiding the call controls');
+    xapi.Config.UserInterface.Features.HideAll.set("True");
+  } else if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
+    console.log('Call Ringing, showing call controls');
+    xapi.Config.UserInterface.Features.HideAll.set("False");
+  }
+
 }
 
 // Subscribe to the Call Status and send it to our custom functions
 xapi.Status.Call.AnswerState.on(detectCallAnswered);
-xapi.Status.Call.Status.on(detectCallDisconnect);
+xapi.Status.Call.Status.on(detectCall);
