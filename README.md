@@ -37,6 +37,9 @@ If you prefer to send the check in notification via an email, you can use servic
 1. Create and new mailgun account [here](https://signup.mailgun.com/new/signup)
 2. After creating your account, you can use the free sandbox to test the macro. Navigate to the sandbox domain to copy the details and setup your verified email addresses to test with. Then copy the parameters into the ``RECEPTION_MACRO_WEBEX`` macro.
 ![image](https://user-images.githubusercontent.com/21026209/149517957-25b218bb-6c5a-44c1-98fb-22b200a52e8a.png)
+3. Ensure the all mailgun parameters are entered in the macro.
+![image](https://user-images.githubusercontent.com/21026209/149520441-696c77a4-838f-418d-a23e-67c84f4a3446.png)
+
 
 
 ## Example of the Webex notification
