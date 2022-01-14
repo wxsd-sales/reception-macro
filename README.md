@@ -1,17 +1,18 @@
 # Reception-Macro
 
-This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notify staff via email or as a webex message send via a bot, the other button will automatically dial a member of staff.
+This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notify staff via email or as a Webex message send via a bot, the other button will automatically dial a member of staff.
 
 ## Flow of the check in process
 ![ezgif-2-6041f9e0f5](https://user-images.githubusercontent.com/21026209/148802958-06ecd19b-f57e-4ee5-8845-a28078257d17.gif)
 
 ## Requirements
 1. A CE9.X or RoomOS Cisco Telepresence.
-2. An Email services which can send Emails triggered by a webhook.
+2. An Mailgun account or webhook to email service or Webex Bot account
 
 ## Setup
-1. Add your email ``WEBHOOK_URL`` ``EMAIL`` and ``NUMBER``to ``RECEPTION_MACRO``.
-2. Upload the Macro ``RECEPTION_MACRO`` on your device either through the web interface or via Control Hub.
+1. Depending on your deployment option (email, webhook or bot), modify parameters at the beginning of the macro.
+For instance, for a Webex Bot account add the  ``BOT_API_KEY``, ``TO``, ``NUMBER``,  ``CALL_BACK`` parameters.
+2. Upload the Macro ``RECEPTION_MACRO_*`` onto your device either through the web interface or via Control Hub.
 
 ## Uninstall
 This macro hides the UI elements on your device, so to show them again, do the following.
@@ -24,13 +25,23 @@ https://roomos.cisco.com/xapi/Configuration.UserInterface.Features.HideAll/
 https://roomos.cisco.com/xapi/Configuration.UserInterface.SettingsMenu.Visibility.  
 Alternatively you can run the ``Show-UI`` Macro to show the UI again.
 
-## Zapier Account Setup
-This macro sends the check in notification via email using a Zapier. You will need a Zapier account and a simple Zap connecting a webhook to an email service.
-1. Create and new Zap with a webhook and add an email step to it. Take note of the wekhook URL.
-![image](https://user-images.githubusercontent.com/21026209/146974688-1a006def-e226-462b-b0e5-faaa68a64cf7.png)
-2. On the email step, format the email you with ``To`` , ``Name``  and ``Message``
-![image](https://user-images.githubusercontent.com/21026209/146975375-297dbc30-98d4-45bb-a742-b35052384d3a.png)
+## Webex Bot Account Setup
+If you are intending to get notifications via Webex, you will need a bot account.
+1. Sign into your Webex account and create a bot account [here](https://developer.webex.com/my-apps/new/bot)
+2. Copy the bot access token use this in the ``RECEPTION_MACRO_WEBEX`` macro usder the ``BOT_API_KEY``
+![image](https://user-images.githubusercontent.com/21026209/149517203-727afde3-9691-403b-9da3-db0c0464e887.png)
+
+
+## Mailgun Account Setup
+If you prefer to send the check in notification via an email, you can use services such as mailgun. You will need to create an account.
+1. Create and new mailgun account [here](https://signup.mailgun.com/new/signup)
+2. After creating your account, you can use the free sandbox to test the macro. Navigate to the sandbox domain to copy the details and setup your verified email addresses to test with. Then copy the parameters into the ``RECEPTION_MACRO_WEBEX`` macro.
+![image](https://user-images.githubusercontent.com/21026209/149517957-25b218bb-6c5a-44c1-98fb-22b200a52e8a.png)
+
+
+## Example of the Webex notification
+![image](https://user-images.githubusercontent.com/21026209/149518970-5c17a16f-9005-400e-8b6e-650a46a69819.png)
 
 
 ## Example of the email notification
-![image](https://user-images.githubusercontent.com/21026209/146975955-e7407894-b279-44e8-b4fc-6a4b14d5fab8.png)
+![image](https://user-images.githubusercontent.com/21026209/149518629-8d79765c-5007-41ff-8fd2-2a1c3fc4bb37.png)
