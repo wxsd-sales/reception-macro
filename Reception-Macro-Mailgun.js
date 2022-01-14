@@ -4,7 +4,7 @@ import xapi from 'xapi';
 // Mailgun sandbox details
 const API_BASE_URL = 'https://api.mailgun.net/v3/<SANDBOX-DOMAIN>/messages';
 const USERNAME = 'api';
-const API_Key = '################';
+const API_KEY = '################';
 const TO = 'user@example.com';
 const FROM = 'mailgun@<SANDBOX-DOMAIN>';
 
@@ -21,7 +21,7 @@ const SHOW_INCALL_CONTROLS = true;
 ///////////////////////////////////
 
 // Convert the usernamae and password into hash for basic auth with mailgun
-const hash = btoa(`${USERNAME}:${API_Key}`);
+const hash = btoa(`${USERNAME}:${API_KEY}`);
 
 // Varible to store name entered
 let  tempName = '';
