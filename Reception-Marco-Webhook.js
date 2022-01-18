@@ -15,6 +15,14 @@ const NUMBER = 'staff@example.com';
 // Show call controls while in call
 const SHOW_INCALL_CONTROLS = true;
 
+// Allow the device to auto answer calls which match
+// the regular expressions below
+const ALLOW_AUTO_ANSWER = true;
+
+// Create your array of regular expressions
+const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/, 
+                                  /^wimills.*@example.com$/,
+                                  /^.*1231232/];
 
 ///////////////////////////////////
 // Do not change anything below
@@ -195,8 +203,8 @@ xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
       const PAYLOAD = { 
         "to": TO,
         "from": FROM, 
-        "subject": tempName+' just checked in',
-        "text": `${tempName} just checked in at ${timestamp}`
+        "subject": `${tempName} just checked in at the ${DEVICE_LOCATION}`,
+        "text": `${tempName} just checked in at the ${DEVICE_LOCATION} at ${timestamp}`
       }
       sendEmail(PAYLOAD);
     }
@@ -294,6 +302,65 @@ function detectCall(event){
 
 }
 
+// Handles all incoming call events
+async function checkCall(event){
+
+  console.log('Incoming call');
+  console.log(event);
+
+  // If there is no current call, record it and answer it
+  if(!activeCall && ALLOW_AUTO_ANSWER){
+   
+    // Check RemoteURI against regex numbers
+
+    const normalisedURI = normaliseRemoteURI(event.RemoteURI);
+
+    const isMatch = AUTOANSWER_NUMBERS_REGEX.some(rx => rx.test(normalisedURI));
+
+    if(isMatch){
+      answerCall(event);
+    } else {
+      console.log('Did not match Regex, call ignored');
+    }
+  
+  } else {
+
+    // Reject the call if that is our preference 
+    if(REJECT_ADDITIONAL_CALLS){
+      console.log('Additional Call Rejected');
+      xapi.Command.Call.Reject(
+        { CallId: event.CallId });
+      return;
+    }
+
+    // Otherwise ingnore incoming call
+    console.log('Ignoring this call')
+
+
+    // We won't bother to answer this additional call and let the system handle
+    // it with its default behaviour
+  }
+
+}
+
+
+// This fuction will store the current call information and answer the call
+function answerCall(event) {
+  
+  console.log('Answering call')
+  
+  // Set active Call to true
+  activeCall = true;
+
+  xapi.Command.Call.Accept(
+    { CallId: event.CallId }).catch(
+      (error) =>{
+        console.error(error);
+      });
+
+}
+
 // Subscribe to the Call Status and send it to our custom functions
 xapi.Status.Call.AnswerState.on(detectCallAnswered);
 xapi.Status.Call.Status.on(detectCall);
+xapi.Event.IncomingCallIndication.on(checkCall);
