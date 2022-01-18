@@ -12,7 +12,8 @@ This macro replaces the interface on your Cisco Telepresence with a Reception Ch
 ## Setup
 1. Depending on your deployment option (email, webhook or bot), modify parameters at the beginning of the macro.
 For instance, for a Webex Bot account add the  ``BOT_API_KEY``, ``TO``, ``NUMBER``,  ``CALL_BACK`` parameters.
-2. Upload the Macro ``RECEPTION_MACRO_*`` onto your device either through the web interface or via Control Hub.
+2. Add details such as the ``DEVICE_LOCATION``, ``CALL_BACK``, ``SHOW_INCALL_CONTROLS`` and ``ALLOW_AUTO_ANSWER`` to the beginning of the macro depending on your preference on how the you want the macro to work.
+3. Upload the Macro ``RECEPTION_MACRO_*`` onto your device either through the web interface or via Control Hub.
 
 ## Uninstall
 This macro hides the UI elements on your device, so to show them again, do the following.
