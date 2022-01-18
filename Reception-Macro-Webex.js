@@ -16,6 +16,15 @@ const CALL_BACK = 'reception@example.com';
 // Show call controls while in call
 const SHOW_INCALL_CONTROLS = true;
 
+// Allow the device to auto answer calls which match
+// the regular expressions below
+const ALLOW_AUTO_ANSWER = true;
+
+// Create your array of regular expressions
+const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/, 
+                                  /^staff.*@example.com$/,
+                                  /^.*1231232/];
+
 ///////////////////////////////////
 // Do not change anything below
 ///////////////////////////////////
@@ -24,7 +33,8 @@ const SHOW_INCALL_CONTROLS = true;
 const WEBEX_URL = 'https://webexapis.com/v1/messages';
 
 // Varible to store name entered
-let  tempName = '';
+let tempName = '';
+let activeCall = false;
 
 
 // Enable the HTTP client if it isn't already
@@ -192,8 +202,8 @@ xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
 
       const PAYLOAD = { 
         "toPersonEmail": TO,
-        "text": `${tempName} just checked in at ${timestamp}`,
-        "markdown" : `##${tempName} just checket in\n[Click here to call the reception device](tel:${CALL_BACK})`,
+        "text": `${tempName} just checked in at the: ${DEVICE_LOCATION}`,
+        "markdown" : `## ${tempName} just checked in at the: ${DEVICE_LOCATION}\n[Click here to call the device](tel:${CALL_BACK})`,
       }
       sendMessage(PAYLOAD);
     }
@@ -210,3 +220,163 @@ xapi.event.on('UserInterface Message TextInput Response', (event) => {
       break; 
   }
 });
+
+
+// Listen for initial button presses
+xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
+    if(event.PanelId == 'send_email'){
+      tempName = '';
+      console.log('Send Email Selected');
+      showPanel('initial')
+    } else if (event.PanelId == 'place_call') {
+      console.log('Place Call Selected');
+
+      xapi.Command.Dial(
+        {  Number: NUMBER });
+
+    }
+});
+
+
+
+// This function sends an email via mailgun
+// the payload requires a payload object containting
+// to, from, subject and text
+function sendMessage(data){
+
+  console.log('Sending Webex Message');
+
+  console.log(data);
+
+  // Sending payload
+  xapi.command('HttpClient Post', {
+    Header: [
+    "Content-Type: application/json",
+    "Authorization: Bearer " + BOT_API_KEY] , 
+    Url: WEBEX_URL,
+    ResultBody: 'plaintext'
+  }, JSON.stringify(data))
+  .then((result) => {
+    console.log('Message sent');
+    console.log(result);
+    xapi.Command.UserInterface.Message.Alert.Display
+      ({ Duration: 3
+      , Text: 'Check in successful'
+      , Title: 'Success'});
+  })
+  .catch((err) => {
+    console.log("Failed: " + JSON.stringify(err));
+    console.log(err);
+        
+    // Should close panel and notifiy errors
+    xapi.Command.UserInterface.Message.Alert.Display
+        ({ Duration: 3
+        , Text: 'Could not send message'
+        , Title: 'Error'});
+  });
+
+}
+
+// This function will detect if a call is in an answered state
+// and enable call controls if enabled for this macro
+function detectCallAnswered(event){
+
+  // Log all Call Answerstate events
+  console.log(event);
+  
+  // Check that it is Answered and that currentMarco is true
+  if(event != 'Answered' && SHOW_INCALL_CONTROLS == true )
+    return;
+ 
+  console.log('Call answered, showing call controls');
+  xapi.Config.UserInterface.Features.HideAll.set("False");
+    
+
+}
+
+// This fuction will remove the SIP and Spark etc prefixes
+function normaliseRemoteURI(number){
+  var regex = /^(sip:|h323:|spark:|h320:|webex:|locus:)/gi;
+  number = number.replace(regex, '');
+  console.log('Normalised Remote URI to: ' + number);
+  return number;
+}
+
+// This function will detect if a call ending or receiving a call
+function detectCall(event){
+
+  console.log (event);
+
+  if(event == 'Disconnecting' ){
+    console.log('Call disconnecting, hiding the call controls');
+    activeCall = false;
+    xapi.Config.UserInterface.Features.HideAll.set("True");
+  } else if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
+    console.log('Call Ringing, showing call controls');
+    xapi.Config.UserInterface.Features.HideAll.set("False");
+  }
+
+}
+
+// Handles all incoming call events
+async function checkCall(event){
+
+  console.log('Incoming call');
+  console.log(event);
+
+  // If there is no current call, record it and answer it
+  if(!activeCall && ALLOW_AUTO_ANSWER){
+   
+    // Check RemoteURI against regex numbers
+
+    const normalisedURI = normaliseRemoteURI(event.RemoteURI);
+
+    const isMatch = AUTOANSWER_NUMBERS_REGEX.some(rx => rx.test(normalisedURI));
+
+    if(isMatch){
+      answerCall(event);
+    } else {
+      console.log('Did not match Regex, call ignored');
+    }
+  
+  } else {
+
+    // Reject the call if that is our preference 
+    if(REJECT_ADDITIONAL_CALLS){
+      console.log('Additional Call Rejected');
+      xapi.Command.Call.Reject(
+        { CallId: event.CallId });
+      return;
+    }
+
+    // Otherwise ingnore incoming call
+    console.log('Ignoring this call')
+
+
+    // We won't bother to answer this additional call and let the system handle
+    // it with its default behaviour
+  }
+
+}
+
+
+// This fuction will store the current call information and answer the call
+function answerCall(event) {
+  
+  console.log('Answering call')
+  
+  // Set active Call to true
+  activeCall = true;
+
+  xapi.Command.Call.Accept(
+    { CallId: event.CallId }).catch(
+      (error) =>{
+        console.error(error);
+      });
+
+}
+
+// Subscribe to the Call Status and send it to our custom functions
+xapi.Status.Call.AnswerState.on(detectCallAnswered);
+xapi.Status.Call.Status.on(detectCall);
+xapi.Event.IncomingCallIndication.on(checkCall);
