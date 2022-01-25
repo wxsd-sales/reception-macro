@@ -1,8 +1,10 @@
 # Reception-Macro
 
-This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notify staff via email or as a Webex message send via a bot, the other button will automatically dial a member of staff.
+This macro replaces the interface on your Cisco Telepresence with a Reception Check-In system with two buttons. One button will allow a guest to check in and notify staff via email or as a Webex message send via a bot in the form of an adaptive card, the other button will automatically dial a member of staff.
 
-Additional, an auto answer feature is possible to enable along with a regular expression to permit selected staff to call the system have it auto answer for them.
+Additional, an auto answer feature is possible to enable along with a regular expression to permit selected staff to call the system have it auto answer for approved staff.
+
+This solutions shines when using the Webex client where we can leverage a click to call within an adaptive card and record check in details within a 1:1 or Group space.
 
 ## Flow of the check in process
 ![ezgif-2-6041f9e0f5](https://user-images.githubusercontent.com/21026209/148802958-06ecd19b-f57e-4ee5-8845-a28078257d17.gif)
@@ -45,9 +47,8 @@ If you prefer to send the check in notification via an email, you can use servic
 
 
 
-## Example of the Webex notification
-![image](https://user-images.githubusercontent.com/21026209/151003160-5e728807-a0a6-494e-a43c-9adffd933fd7.png)
-
+## Example of the Webex adaptive card
+![image](https://user-images.githubusercontent.com/21026209/151003810-9dc5793c-e6c2-43b4-b0e1-2a781abe9aa6.png)
 
 
 ## Example of the email notification
