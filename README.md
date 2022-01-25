@@ -33,7 +33,7 @@ Alternatively you can run the ``Show-UI`` Macro to show the UI again.
 ## Webex Bot Account Setup
 If you are intending to get notifications via Webex, you will need a bot account.
 1. Sign into your Webex account and create a bot account [here](https://developer.webex.com/my-apps/new/bot)
-2. Copy the bot access token use this in the ``RECEPTION_MACRO_WEBEX`` macro usder the ``BOT_API_KEY``
+2. Copy the bot access token and use this in the ``RECEPTION_MACRO_WEBEX`` macro under the ``BOT_API_KEY``
 ![image](https://user-images.githubusercontent.com/21026209/149517203-727afde3-9691-403b-9da3-db0c0464e887.png)
 
 
@@ -44,7 +44,6 @@ If you prefer to send the check in notification via an email, you can use servic
 ![image](https://user-images.githubusercontent.com/21026209/149517957-25b218bb-6c5a-44c1-98fb-22b200a52e8a.png)
 3. Ensure the all mailgun parameters are entered in the macro.
 ![image](https://user-images.githubusercontent.com/21026209/149520441-696c77a4-838f-418d-a23e-67c84f4a3446.png)
-
 
 
 ## Example of the Webex adaptive card
