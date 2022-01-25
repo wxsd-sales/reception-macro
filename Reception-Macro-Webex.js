@@ -177,7 +177,147 @@ function showPanel(state){
       });
 }
 
+function generateAdaptiveCard(name){
 
+  const timestamp = new Date();
+  
+  const time = `${timestamp.getUTCHours()}:${timestamp.getUTCMinutes()}`;
+
+  console.log(time);
+
+  const attachment = [
+    {
+        "contentType": "application/vnd.microsoft.card.adaptive",
+        "content": {
+          "type": "AdaptiveCard",
+          "body": [
+              {
+                  "type": "ColumnSet",
+                  "columns": [
+                      {
+                          "type": "Column",
+                          "items": [
+                              {
+                                  "type": "Image",
+                                  "style": "Person",
+                                  "url": "https://i.imgur.com/jl8Abob.png",
+                                  "size": "Medium",
+                                  "height": "50px"
+                              }
+                          ],
+                          "width": "auto"
+                      },
+                      {
+                          "type": "Column",
+                          "items": [
+                              {
+                                  "type": "TextBlock",
+                                  "text": "Reception check in system",
+                                  "weight": "Lighter",
+                                  "color": "Accent"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "weight": "Bolder",
+                                  "text": `Someone just checked into ${DEVICE_LOCATION}`,
+                                  "wrap": true,
+                                  "color": "Light",
+                                  "size": "Medium",
+                                  "spacing": "Small"
+                              }
+                          ],
+                          "width": "stretch"
+                      }
+                  ]
+              },
+              {
+                  "type": "ColumnSet",
+                  "columns": [
+                      {
+                          "type": "Column",
+                          "width": 35,
+                          "items": [
+                              {
+                                  "type": "TextBlock",
+                                  "text": "Name:",
+                                  "color": "Light"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "text": "Time:",
+                                  "weight": "Lighter",
+                                  "color": "Light",
+                                  "spacing": "Small"
+                              }
+                          ]
+                      },
+                      {
+                          "type": "Column",
+                          "width": 65,
+                          "items": [
+                              {
+                                  "type": "TextBlock",
+                                  "text": name,
+                                  "color": "Light"
+                              },
+                              {
+                                  "type": "TextBlock",
+                                  "text": time,
+                                  "color": "Light",
+                                  "weight": "Lighter",
+                                  "spacing": "Small"
+                              }
+                          ]
+                      }
+                  ],
+                  "spacing": "Padding",
+                  "horizontalAlignment": "Center"
+              },
+              {
+                  "type": "TextBlock",
+                  "text": "You can greet them using the link below:"
+              },
+              {
+                  "type": "ColumnSet",
+                  "columns": [
+                      {
+                          "type": "Column",
+                          "width": "auto",
+                          "items": [
+                              {
+                                  "type": "Image",
+                                  "altText": "",
+                                  "url": "https://i.imgur.com/tet32tw.png",
+                                  "size": "stretch",
+                                  "width": "20px"
+                              }
+                          ],
+                          "spacing": "Small"
+                      },
+                      {
+                          "type": "Column",
+                          "width": "Stretch",
+                          "items": [
+                              {
+                                  "type": "TextBlock",
+                                  "text": `[Dial the device](webexteams://meet?sip=${CALL_BACK})`,
+                                  "size": "Medium"
+                              }
+                          ],
+                          "verticalContentAlignment": "Center",
+                          "spacing": "Small"
+                      }
+                  ]
+              }
+          ],
+          "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+          "version": "1.2"
+      }
+    }
+  ];
+
+  return attachment;
+}
 
 // Listen for clicks on the buttons
 xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
@@ -204,6 +344,7 @@ xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
         "toPersonEmail": TO,
         "text": `${tempName} just checked in at the: ${DEVICE_LOCATION}`,
         "markdown" : `## ${tempName} just checked in at the: ${DEVICE_LOCATION}\n[Click here to call the device](tel:${CALL_BACK})`,
+        "attachments" : generateAdaptiveCard(tempName)
       }
       sendMessage(PAYLOAD);
     }
