@@ -46,7 +46,8 @@ If you prefer to send the check in notification via an email, you can use servic
 
 
 ## Example of the Webex notification
-![image](https://user-images.githubusercontent.com/21026209/150026797-e9856687-71f7-4df5-ba37-6c1eb0e97c2e.png)
+![image](https://user-images.githubusercontent.com/21026209/151003160-5e728807-a0a6-494e-a43c-9adffd933fd7.png)
+
 
 
 ## Example of the email notification
