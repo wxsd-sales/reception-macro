@@ -25,6 +25,20 @@ const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/,
                                   /^staff.*@example.com$/,
                                   /^.*1231232/];
 
+// By default, this macro hides the Settings UI and
+// Call Controls. If you wish to test this macro without
+// hiding these, change this value to false.
+const HIDE_UI = true;
+
+// While this macro is running and the above HIDE_UI value
+// is set to true, it may still be neccessary to open
+// the settings menu. For that reason, you can set a secret
+// keyword which can be used as the check in name which will
+// toggle the settings menu visibility. It isn't case sensitive.
+// Set it to a blank keyword if you do not want this feature available.
+const UNLOCK_KEYWORD = 'settings';
+
+
 ///////////////////////////////////
 // Do not change anything below
 ///////////////////////////////////
@@ -32,9 +46,10 @@ const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/,
 
 const WEBEX_URL = 'https://webexapis.com/v1/messages';
 
-// Varible to store name entered
+// Varibles to store states
 let tempName = '';
 let activeCall = false;
+let tempSettings = false;
 
 
 // Enable the HTTP client if it isn't already
@@ -49,7 +64,7 @@ xapi.Config.HttpClient.Mode.get().then(value => {
 // Hide the user interface
 xapi.Config.UserInterface.Features.HideAll.get().then(value => {
   console.log('Hide UI is : ' + value);
-  if(value == 'False'){
+  if(value == 'False' && HIDE_UI){
     console.log('Hiding the UI');
     xapi.Config.UserInterface.Features.HideAll.set("True");
   }
@@ -58,7 +73,7 @@ xapi.Config.UserInterface.Features.HideAll.get().then(value => {
 // Hide the settings menu
 xapi.Config.UserInterface.SettingsMenu.Visibility.get().then(value => {
   console.log('Settings Visibility is : ' + value);
-  if(value == 'Auto'){
+  if(value == 'Auto' && HIDE_UI){
     console.log('Hiding the settings');
     xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
   }
@@ -287,6 +302,7 @@ function generateAdaptiveCard(name){
                               {
                                   "type": "Image",
                                   "altText": "",
+                                  "style": "Person",
                                   "url": "https://i.imgur.com/tet32tw.png",
                                   "size": "stretch",
                                   "width": "20px"
@@ -357,7 +373,11 @@ xapi.event.on('UserInterface Message TextInput Response', (event) => {
     case 'enter_name':
       tempName = event.Text;
       console.log('Name Entered: ' + tempName);
-      showPanel('submit');
+      if(tempName.toLowerCase() == UNLOCK_KEYWORD.toLowerCase() && tempName != ''){
+        toggleSettings();
+      } else {
+        showPanel('submit');
+      }
       break; 
   }
 });
@@ -378,6 +398,33 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
     }
 });
 
+function toggleSettings(){
+  
+  console.log("Setting UI toggle");
+
+  if(!tempSettings){
+    tempSettings = true;
+    xapi.Config.UserInterface.SettingsMenu.Visibility.set('Auto');
+    xapi.command('UserInterface Extensions Panel Close');
+    xapi.Command.UserInterface.Message.Alert.Display
+        ({ Duration: 3
+        , Text: 'Settings visibility has been enabled'
+        , Title: 'Settings Toggled'});
+  } else {
+    tempSettings = false;
+    xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
+    xapi.command('UserInterface Extensions Panel Close');
+    xapi.Command.UserInterface.Message.Alert.Display
+        ({ Duration: 3
+        , Text: 'Settings visibility has been disabled'
+        , Title: 'Settings Toggled'});
+
+  }
+
+
+
+
+}
 
 
 // This function sends an email via mailgun
@@ -451,7 +498,9 @@ function detectCall(event){
   if(event == 'Disconnecting' ){
     console.log('Call disconnecting, hiding the call controls');
     activeCall = false;
-    xapi.Config.UserInterface.Features.HideAll.set("True");
+    if(HIDE_UI){
+      xapi.Config.UserInterface.Features.HideAll.set("True");
+    }
   } else if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
     console.log('Call Ringing, showing call controls');
     xapi.Config.UserInterface.Features.HideAll.set("False");
