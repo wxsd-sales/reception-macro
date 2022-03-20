@@ -13,6 +13,9 @@ const NUMBER = 'staff@example.com';
 // Set the number for the auto dial button to call
 const CALL_BACK = 'reception@example.com';
 
+// Set the name of the location of the device
+const DEVICE_LOCATION = 'Lobby';
+
 // Show call controls while in call
 const SHOW_INCALL_CONTROLS = true;
 
