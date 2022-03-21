@@ -2,19 +2,19 @@ import xapi from 'xapi';
 
 
 // Webex details
-const BOT_API_KEY = '#########';
+const BOT_API_KEY = '#######';
 
-// Who you want to notify
+// Who you want to notify, this can also be a room ID
 const TO = 'staff@example.com';
 
 // Set the number for the auto dial button to call
-const NUMBER = 'staff@example.com';
+const NUMBER = 'staff@example';
 
 // Set the number for the auto dial button to call
-const CALL_BACK = 'reception@example.com';
+const CALL_BACK = 'device@example.com';
 
-// Set the name of the location of the device
-const DEVICE_LOCATION = 'Lobby';
+// Device Location, used for the notification
+const DEVICE_LOCATION = 'Reception';
 
 // Show call controls while in call
 const SHOW_INCALL_CONTROLS = true;
