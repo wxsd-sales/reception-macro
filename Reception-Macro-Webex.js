@@ -413,6 +413,9 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
     }
 });
 
+
+// This function will use the Webex people API to convert a persons
+// Webex ID to their email for use with the regular expression auto answer
 function convertSparkId(event){
 
   const id = event.RemoteURI.substring(6);
@@ -542,19 +545,15 @@ function detectCall(event){
 
   console.log(event);
 
-  if(event == 'Disconnecting' ){
-    console.log('Call disconnecting, hiding the call controls');
-    activeCall = false;
-    if(HIDE_UI){
-      xapi.Config.UserInterface.Features.HideAll.set("True");
-    }
-  } else if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
+  if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
     console.log('Call Ringing, showing call controls');
     xapi.Config.UserInterface.Features.HideAll.set("False");
   }
 
 }
 
+
+// This function checks the calling number against our regular expression list
 function regxCheck(event){
 
   const normalisedURI = normaliseRemoteURI(event.RemoteURI);
@@ -577,7 +576,7 @@ function checkNumber(event){
   {
     convertSparkId(event);
   } else {
-    // Otherwise we need to normalise the URI and carry out our regulare expression
+    // Otherwise we send it straight to the regular expression check
     regxCheck(event);
   } 
 
@@ -589,7 +588,7 @@ async function checkCall(event){
   console.log('Incoming call');
   console.log(event);
 
-  // If there is no current call, record it and answer it
+  // If there is no current call and auto answer is enabled, check the number
   if(!activeCall && ALLOW_AUTO_ANSWER){
     checkNumber(event); 
   } else {
@@ -629,7 +628,21 @@ function answerCall(event) {
 
 }
 
+// This function handles call disconnects and hides the UI again
+function disconnecting(event){
+
+  console.log('Call disconnecting, hiding the call controls');
+  activeCall = false;
+  if(HIDE_UI){
+    xapi.Config.UserInterface.Features.HideAll.set("True");
+  }
+
+}
+
+
+
 // Subscribe to the Call Status and send it to our custom functions
 xapi.Status.Call.AnswerState.on(detectCallAnswered);
 xapi.Status.Call.Status.on(detectCall);
 xapi.Event.IncomingCallIndication.on(checkCall);
+xapi.Event.CallDisconnect.on(disconnecting);
