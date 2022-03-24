@@ -2,13 +2,14 @@ import xapi from 'xapi';
 
 
 // Webex details
-const BOT_API_KEY = '#######';
+const BOT_API_KEY = '#############';
 
-// Who you want to notify, this can also be a room ID
+// Who you want to notify, this can also be a space ID
+//const TO = 'wimills@cisco.com';
 const TO = 'staff@example.com';
 
 // Set the number for the auto dial button to call
-const NUMBER = 'staff@example';
+const NUMBER = 'staff@example.com';
 
 // Set the number for the auto dial button to call
 const CALL_BACK = 'device@example.com';
@@ -23,9 +24,12 @@ const SHOW_INCALL_CONTROLS = true;
 // the regular expressions below
 const ALLOW_AUTO_ANSWER = true;
 
+// Allow for additional calls to be recieved
+const REJECT_ADDITIONAL_CALLS = true;
+
 // Create your array of regular expressions
 const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/, 
-                                  /^staff.*@example.com$/,
+                                  /^user.*@example.com$/,
                                   /^.*1231232/];
 
 // By default, this macro hides the Settings UI and
@@ -48,6 +52,7 @@ const UNLOCK_KEYWORD = 'settings';
 
 
 const WEBEX_URL = 'https://webexapis.com/v1/messages';
+const WEBEX_PEOPLE = 'https://webexapis.com/v1/people';
 
 // Varibles to store states
 let tempName = '';
@@ -359,12 +364,19 @@ xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
       xapi.command('UserInterface Extensions Panel Close');
       const timestamp = new Date();
 
-      const PAYLOAD = { 
-        "toPersonEmail": TO,
+
+      let PAYLOAD = { 
         "text": `${tempName} just checked in at the: ${DEVICE_LOCATION}`,
         "markdown" : `## ${tempName} just checked in at the: ${DEVICE_LOCATION}\n[Click here to call the device](tel:${CALL_BACK})`,
         "attachments" : generateAdaptiveCard(tempName)
       }
+
+      if (TO.indexOf('@') > -1){
+        PAYLOAD["toPersonEmail"] = TO
+      } else {
+        PAYLOAD["roomId"] = TO
+      }
+
       sendMessage(PAYLOAD);
     }
     
@@ -400,6 +412,36 @@ xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
 
     }
 });
+
+function convertSparkId(event){
+
+  const id = event.RemoteURI.substring(6);
+
+  console.log('Converting ID: ' +id);
+
+  const URL = WEBEX_PEOPLE + '?id=' + id;
+
+  xapi.command('HttpClient Get', {
+    Header: [
+    "Content-Type: application/json",
+    "Authorization: Bearer " + BOT_API_KEY] , 
+    Url: URL,
+    ResultBody: 'plaintext'
+  })
+  .then((result) => {
+    console.log('People check sent');
+    console.log(typeof(result));
+    const body = JSON.parse(result.Body);
+    const email = body.items[0].emails[0];
+    console.log('ID to email: ' + email);
+    event.RemoteURI = email;
+    regxCheck(event);
+  })
+  .catch((err) => {
+    console.log("Failed: " + JSON.stringify(err));
+  });
+
+}
 
 function toggleSettings(){
   
@@ -487,8 +529,10 @@ function detectCallAnswered(event){
 
 // This fuction will remove the SIP and Spark etc prefixes
 function normaliseRemoteURI(number){
+ 
   var regex = /^(sip:|h323:|spark:|h320:|webex:|locus:)/gi;
   number = number.replace(regex, '');
+  
   console.log('Normalised Remote URI to: ' + number);
   return number;
 }
@@ -496,7 +540,7 @@ function normaliseRemoteURI(number){
 // This function will detect if a call ending or receiving a call
 function detectCall(event){
 
-  console.log (event);
+  console.log(event);
 
   if(event == 'Disconnecting' ){
     console.log('Call disconnecting, hiding the call controls');
@@ -511,6 +555,34 @@ function detectCall(event){
 
 }
 
+function regxCheck(event){
+
+  const normalisedURI = normaliseRemoteURI(event.RemoteURI);
+
+  const isMatch = AUTOANSWER_NUMBERS_REGEX.some(rx => rx.test(normalisedURI));
+
+  if(isMatch){
+    answerCall(event);
+  } else {
+    console.log('Did not match Regex, call ignored');
+  }
+
+}
+
+// This function handles all incoming numbing checking
+function checkNumber(event){
+
+  // For numbers begining with spark we need to convert to a URI
+  if (event.RemoteURI.indexOf('spark:') > -1)
+  {
+    convertSparkId(event);
+  } else {
+    // Otherwise we need to normalise the URI and carry out our regulare expression
+    regxCheck(event);
+  } 
+
+}
+
 // Handles all incoming call events
 async function checkCall(event){
 
@@ -519,19 +591,7 @@ async function checkCall(event){
 
   // If there is no current call, record it and answer it
   if(!activeCall && ALLOW_AUTO_ANSWER){
-   
-    // Check RemoteURI against regex numbers
-
-    const normalisedURI = normaliseRemoteURI(event.RemoteURI);
-
-    const isMatch = AUTOANSWER_NUMBERS_REGEX.some(rx => rx.test(normalisedURI));
-
-    if(isMatch){
-      answerCall(event);
-    } else {
-      console.log('Did not match Regex, call ignored');
-    }
-  
+    checkNumber(event); 
   } else {
 
     // Reject the call if that is our preference 
@@ -549,7 +609,7 @@ async function checkCall(event){
     // We won't bother to answer this additional call and let the system handle
     // it with its default behaviour
   }
-
+    
 }
 
 
