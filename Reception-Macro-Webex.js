@@ -5,7 +5,6 @@ import xapi from 'xapi';
 const BOT_API_KEY = '#############';
 
 // Who you want to notify, this can also be a space ID
-//const TO = 'wimills@cisco.com';
 const TO = 'staff@example.com';
 
 // Set the number for the auto dial button to call
