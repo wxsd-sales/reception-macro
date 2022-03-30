@@ -36,6 +36,12 @@ If you are intending to get notifications via Webex, you will need a bot account
 2. Copy the bot access token and use this in the ``RECEPTION_MACRO_WEBEX`` macro under the ``BOT_API_KEY``
 ![image](https://user-images.githubusercontent.com/21026209/149517203-727afde3-9691-403b-9da3-db0c0464e887.png)
 
+## Getting The Room ID
+For the Webex Bot version of this solution, we can send the adaptive card to a room instead of a 1:1 chat. To do this, you will need to enter the room ID on the Macro instead of the 1:1 email. Follow these steps to get the ID:
+1. Add your Bot as a person to the space you wish to receive notifications
+2. Go to this page on [developer.webex.com](https://developer.webex.com/docs/api/v1/rooms/list-rooms) and use your Bots access token as the Bearer token and hit run.
+3. Inspect the response and identify the ``id`` value for the space you want to notify and use this in the Macro.
+
 
 ## Mailgun Account Setup
 If you prefer to send the check in notification via an email, you can use services such as mailgun. You will need to create an account.
