@@ -134,10 +134,10 @@ function showPanel(state){
       break;
     case 'submit':
       message = 'Press check in when ready';
-      name_button = 'Change Name';
+      name_button = 'Change';
       name = `<Widget>
                   <WidgetId>name_text</WidgetId>
-                  <Name>Name Entered: ${tempName}</Name>
+                  <Name>Name: ${tempName}</Name>
                   <Type>Text</Type>
                   <Options>size=2;fontSize=normal;align=center</Options>
                 </Widget>`;
@@ -202,8 +202,15 @@ function showPanel(state){
 function generateAdaptiveCard(name){
 
   const timestamp = new Date();
-  
-  const time = `${timestamp.getUTCHours()}:${timestamp.getUTCMinutes()}`;
+
+  let hour = timestamp.getUTCHours();
+  let minute = timestamp.getUTCMinutes();
+  const offset = timestamp.getTimezoneOffset()
+
+  if(hour.toString().length < 2) hour = '0' + hour;
+  if(minute.toString().length < 2) minute = '0' + minute;
+
+  const time = `${hour}:${minute} UTC ${offset/60}`;
 
   console.log(time);
 
@@ -361,8 +368,6 @@ xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
     else if (event.WidgetId == 'submit_button'){
       console.log('submit button clicked');
       xapi.command('UserInterface Extensions Panel Close');
-      const timestamp = new Date();
-
 
       let PAYLOAD = { 
         "text": `${tempName} just checked in at the: ${DEVICE_LOCATION}`,
@@ -386,7 +391,7 @@ xapi.event.on('UserInterface Message TextInput Response', (event) => {
   switch(event.FeedbackId){
     case 'enter_name':
       tempName = event.Text;
-      console.log('Name Entered: ' + tempName);
+      console.log('Name: ' + tempName);
       if(tempName.toLowerCase() == UNLOCK_KEYWORD.toLowerCase() && tempName != ''){
         toggleSettings();
       } else {
@@ -627,7 +632,7 @@ function answerCall(event) {
 
 }
 
-// This function handles call disconnects and hides the UI again
+
 function disconnecting(event){
 
   console.log('Call disconnecting, hiding the call controls');
@@ -637,7 +642,6 @@ function disconnecting(event){
   }
 
 }
-
 
 
 // Subscribe to the Call Status and send it to our custom functions
