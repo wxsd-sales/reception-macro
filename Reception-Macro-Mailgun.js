@@ -1,3 +1,22 @@
+/********************************************************
+ * 
+ * Macro Author:      	William Mills
+ *                    	Technical Solutions Specialist 
+ *                    	wimills@cisco.com
+ *                    	Cisco Systems
+ * 
+ * Version: 1-0-1
+ * Released: 06/14/23
+ * 
+ * This Webex Device macro demos how you can turn your device
+ * into a reception check in system which collects a guests details
+ * and send this information to a member of staff via a Mailgun email.
+ * 
+ * Full Readme, source code and license details available on Github:
+ * https://github.com/wxsd-sales/reception-macro
+ * 
+ ********************************************************/
+
 import xapi from 'xapi';
 
 
@@ -37,22 +56,42 @@ const AUTOANSWER_NUMBERS_REGEX = [/^12345.*@example.com$/,
 const hash = btoa(`${USERNAME}:${API_KEY}`);
 
 // Varible to store name entered
-let  tempName = '';
+let tempName = '';
 
+// Enable HTTP Client for Mailgun API requests
+xapi.Config.HttpClient.Mode.set('On');
 
-// Enable the HTTP client if it isn't already
-xapi.Config.HttpClient.Mode.get().then(value => {
-  console.log('HTTP Client is : ' + value);
-  if(value == 'Off'){
-    console.log('Enabling HTTP Client');
-    xapi.Config.HttpClient.Mode.set('On');
-  }
-});
+// Create and add our Check In and Call Buttons
+const checkInButton = `<Extensions>
+                        <Panel>
+                          <Order>1</Order>
+                          <Type>Home</Type>
+                          <Icon>Home</Icon>
+                          <Color>#A866FF</Color>
+                          <Name>Check In</Name>
+                          <ActivityType>Custom</ActivityType>
+                        </Panel>
+                      </Extensions>`
+
+const callButton = `<Extensions>
+                      <Panel>
+                        <Order>2</Order>
+                        <Type>Home</Type>
+                        <Icon>Helpdesk</Icon>
+                        <Color>#FF0000</Color>
+                        <Name>Call for assistance</Name>
+                        <ActivityType>Custom</ActivityType>
+                      </Panel>
+                    </Extensions>`;
+
+xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'send_email' }, checkInButton)
+xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'place_call' }, callButton)
+
 
 // Hide the user interface
 xapi.Config.UserInterface.Features.HideAll.get().then(value => {
   console.log('Hide UI is : ' + value);
-  if(value == 'False'){
+  if (value == 'False') {
     console.log('Hiding the UI');
     xapi.Config.UserInterface.Features.HideAll.set("True");
   }
@@ -61,52 +100,20 @@ xapi.Config.UserInterface.Features.HideAll.get().then(value => {
 // Hide the settings menu
 xapi.Config.UserInterface.SettingsMenu.Visibility.get().then(value => {
   console.log('Settings Visibility is : ' + value);
-  if(value == 'Auto'){
+  if (value == 'Auto') {
     console.log('Hiding the settings');
     xapi.Config.UserInterface.SettingsMenu.Visibility.set('Hidden');
   }
 });
 
-
-// Add the Button to the touch panel
-// Change the color, icon and name as desired
-xapi.command('UserInterface Extensions Panel Save', {
-    PanelId: 'send_email'
-    }, `<Extensions>
-      <Version>1.8</Version>
-      <Panel>
-        <Order>1</Order>
-        <Type>Home</Type>
-        <Icon>Home</Icon>
-        <Color>#A866FF</Color>
-        <Name>Check In</Name>
-        <ActivityType>Custom</ActivityType>
-      </Panel>
-    </Extensions>`);
-
-// Add the Button to the touch panel
-xapi.command('UserInterface Extensions Panel Save', {
-    PanelId: 'place_call'
-    }, `<Extensions>
-      <Version>1.8</Version>
-      <Panel>
-        <Order>1</Order>
-        <Type>Home</Type>
-        <Icon>Helpdesk</Icon>
-        <Color>#FF0000</Color>
-        <Name>Call for assistance</Name>
-        <ActivityType>Custom</ActivityType>
-      </Panel>
-    </Extensions>`);
-
 // This function displays the panel depending on state
-function showPanel(state){
+function showPanel(state) {
 
   let message = '';
   let name = '';
   let name_button = '';
   let submit = '';
-  switch(state){
+  switch (state) {
     case 'initial':
       message = 'Please enter your name to check in';
       name = '';
@@ -134,14 +141,11 @@ function showPanel(state){
   }
 
   let panel = `<Extensions>
-    <Version>1.8</Version>
     <Panel>
-      <Order>9</Order>
       <Origin>local</Origin>
       <Type>Never</Type>
       <Icon>Webex</Icon>
       <Color>#A8660</Color>
-      <Name>Check_In_1</Name>
       <ActivityType>Custom</ActivityType>
       <Page>
         <Name>Check In</Name>
@@ -163,185 +167,172 @@ function showPanel(state){
           </Widget>
         </Row>
         ${submit}
-        <PageId>ticTac~Toe</PageId>
+        <PageId>CheckIn</PageId>
         <Options>hideRowNames=1</Options>
       </Page>
     </Panel>
   </Extensions>
   `;
 
-  xapi.command('UserInterface Extensions Panel Save', {
-        PanelId: 'Check_In_1'
-    }, panel
-  ).then((event) => {
-          xapi.command('UserInterface Extensions Panel Open', {
-              PanelId: 'Check_In_1'
-          })
-      });
+  xapi.Command.UserInterface.Extensions.Panel.Save({ PanelId: 'Check_In_1' }, panel)
+    .then((event) => {
+      xapi.Command.UserInterface.Extensions.Panel.Open({ PanelId: 'Check_In_1' })
+    });
 }
 
 
-
 // Listen for clicks on the buttons
-xapi.Event.UserInterface.Extensions.Widget.Action.on((event) => {
+xapi.Event.UserInterface.Extensions.Widget.Action.on(event => {
+  if (event.Type !== 'clicked') return;
 
-    if (event.Type !== 'clicked')
-      return
-      
-    if (event.WidgetId == 'enter_name'){
-      console.log('enter name clicked');
-      xapi.command('UserInterface Message TextInput Display', {
-            FeedbackId: 'enter_name',
-            Text: 'Please enter your name',
-            InputType: 'SingleLine',
-            Placeholder: 'Name',
-            Duration: 0,
-          }).catch((error) => { console.error(error); });
-    }
-    else if (event.WidgetId == 'submit_button'){
-      console.log('submit button clicked');
-      xapi.command('UserInterface Extensions Panel Close');
-      const timestamp = new Date();
-
-      const PAYLOAD = { 
+  switch (event.WidgetId){
+    case 'enter_name':
+      console.log('Enter name clicked');
+      xapi.Command.UserInterface.Message.TextInput.Display({
+        FeedbackId: 'enter_name',
+        Text: 'Please enter your name',
+        InputType: 'SingleLine',
+        Placeholder: 'Name',
+        Duration: 0,
+      }).catch((error) => console.error(error));
+      break;
+    case 'submit_button':
+      console.log('Submit button clicked');
+      xapi.Command.UserInterface.Extensions.Panel.Close();
+      const timestamp = new Date().toUTCString();
+      const PAYLOAD = {
         "to": TO,
-        "from": FROM, 
+        "from": FROM,
         "subject": `${tempName} just checked in at the ${DEVICE_LOCATION}`,
         "text": `${tempName} just checked in at the ${DEVICE_LOCATION} at ${timestamp}`
       }
       mailgunSend(PAYLOAD);
-    }
-    
-  });
-
-// Listen for text inputs
-xapi.event.on('UserInterface Message TextInput Response', (event) => {
-  switch(event.FeedbackId){
-    case 'enter_name':
-      tempName = event.Text;
-      console.log('Name Entered: ' + tempName);
-      showPanel('submit');
-      break; 
+      break;
   }
 });
 
+// Listen for text inputs
+xapi.Event.UserInterface.Message.TextInput.Response.on(event => {
+  if(event.FeedbackId != 'enter_name') return;
+  tempName = event.Text;
+  console.log('Name Entered: ' + tempName);
+  showPanel('submit');
+})
+
 
 // Listen for initial button presses
-xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
-    if(event.PanelId == 'send_email'){
+xapi.Event.UserInterface.Extensions.Panel.Clicked.on(event => {
+  switch (event.PanelId){
+    case 'send_email':
       tempName = '';
       console.log('Send Email Selected');
       showPanel('initial')
-    } else if (event.PanelId == 'place_call') {
+      break;
+    case 'place_call':
       console.log('Place Call Selected');
-
-      xapi.Command.Dial(
-        {  Number: NUMBER });
-
-    }
-});
-
+      xapi.Command.Dial({ Number: NUMBER });
+      break;
+  }
+})
 
 
 // This function sends an email via mailgun
 // the payload requires a payload object containting
 // to, from, subject and text
-function mailgunSend(data){
+function mailgunSend(data) {
 
   console.log('Sending Email');
 
   // Convert payload to form data structure
-	const parameters = `?to=${data.to}&from=${data.from}&subject=${data.subject}&text=${data.text}`;
+  const parameters = `?to=${data.to}&from=${data.from}&subject=${data.subject}&text=${data.text}`;
 
   console.log(parameters);
-  
-  const URL = API_BASE_URL+encodeURI(parameters);
+  console.log(hash)
+
+  const URL = API_BASE_URL + encodeURI(parameters);
 
   // Sending payload
-  xapi.command('HttpClient Post', {
+
+  xapi.Command.HttpClient.Post({
     Header: [
-    "Host: mailgun.org",
-    "Authorization: Basic " + hash] , 
+      "Authorization: Basic " + hash],
     Url: URL,
     ResultBody: 'plaintext'
-  }, '')
+  },'')
   .then((result) => {
-    console.log('Email sent');
-    console.log(result.Body);
-    xapi.Command.UserInterface.Message.Alert.Display
-      ({ Duration: 3
-      , Text: 'Check in successful'
-      , Title: 'Success'});
-  })
-  .catch((err) => {
-    console.log("Failed: " + JSON.stringify(err));
-    console.log(err);
-        
-    // Should close panel and notifiy errors
-    xapi.Command.UserInterface.Message.Alert.Display
-        ({ Duration: 3
-        , Text: 'Could not send email'
-        , Title: 'Error'});
-  });
+      console.log('Email sent');
+      console.log(result.Body);
+      xapi.Command.UserInterface.Message.Alert.Display
+        ({
+          Duration: 3
+          , Text: 'Check in successful'
+          , Title: 'Success'
+        });
+    })
+    .catch((err) => {
+      console.log("Failed: " + JSON.stringify(err));
 
+      // This will close the panel and notifiy an error
+      xapi.Command.UserInterface.Message.Alert.Display
+        ({
+          Duration: 3
+          , Text: 'Could not send email'
+          , Title: 'Error'
+        });
+    });
+
+  
 }
 
 // This function will detect if a call is in an answered state
 // and enable call controls if enabled for this macro
-function detectCallAnswered(event){
-
+function detectCallAnswered(event) {
   // Log all Call Answerstate events
   console.log(event);
-  
+
   // Check that it is Answered and that currentMarco is true
-  if(event != 'Answered' && SHOW_INCALL_CONTROLS == true )
-    return;
- 
+  if (event != 'Answered' && SHOW_INCALL_CONTROLS == true) return;
+
   console.log('Call answered, showing call controls');
   xapi.Config.UserInterface.Features.HideAll.set("False");
-    
-
 }
 
 // This function will detect if a call ending or receiving a call
-function detectCall(event){
-
-  console.log (event);
-
-  if(event == 'Disconnecting' ){
+function detectCall(event) {
+  if (event == 'Disconnecting') {
     console.log('Call disconnecting, hiding the call controls');
     xapi.Config.UserInterface.Features.HideAll.set("True");
-  } else if(event == 'Connecting' && SHOW_INCALL_CONTROLS == true){
+  } else if (event == 'Connecting' && SHOW_INCALL_CONTROLS == true) {
     console.log('Call Ringing, showing call controls');
     xapi.Config.UserInterface.Features.HideAll.set("False");
   }
-
 }
+
 // Handles all incoming call events
-async function checkCall(event){
+async function checkCall(event) {
 
   console.log('Incoming call');
   console.log(event);
 
   // If there is no current call, record it and answer it
-  if(!activeCall && ALLOW_AUTO_ANSWER){
-   
+  if (!activeCall && ALLOW_AUTO_ANSWER) {
+
     // Check RemoteURI against regex numbers
 
     const normalisedURI = normaliseRemoteURI(event.RemoteURI);
 
     const isMatch = AUTOANSWER_NUMBERS_REGEX.some(rx => rx.test(normalisedURI));
 
-    if(isMatch){
+    if (isMatch) {
       answerCall(event);
     } else {
       console.log('Did not match Regex, call ignored');
     }
-  
+
   } else {
 
     // Reject the call if that is our preference 
-    if(REJECT_ADDITIONAL_CALLS){
+    if (REJECT_ADDITIONAL_CALLS) {
       console.log('Additional Call Rejected');
       xapi.Command.Call.Reject(
         { CallId: event.CallId });
@@ -351,28 +342,18 @@ async function checkCall(event){
     // Otherwise ingnore incoming call
     console.log('Ignoring this call')
 
-
     // We won't bother to answer this additional call and let the system handle
     // it with its default behaviour
   }
-
 }
-
 
 // This fuction will store the current call information and answer the call
 function answerCall(event) {
-  
   console.log('Answering call')
-  
   // Set active Call to true
   activeCall = true;
-
-  xapi.Command.Call.Accept(
-    { CallId: event.CallId }).catch(
-      (error) =>{
-        console.error(error);
-      });
-
+  xapi.Command.Call.Accept({ CallId: event.CallId })
+  .catch((error) => console.error(error));
 }
 
 // Subscribe to the Call Status and send it to our custom functions
